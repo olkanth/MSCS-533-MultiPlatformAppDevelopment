@@ -1,16 +1,19 @@
-# metrics_conversion
+# Measures Converter App
 
-A new Flutter project.
+A Flutter application designed to perform conversions between various units of length.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+*   **Supported Units**:
+    *   Meters
+    *   Kilometers
+    *   Feet
+    *   Miles
+    *   Inches
+    *   Centimeters
+    *   Yards
+*   **Simple Interface**: Easy-to-use input and dropdown selection for source and target units.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## References
+- Fultter documentation: https://docs.flutter.dev/
+- Dart Widgets: https://api.flutter.dev/flutter/widgets/
