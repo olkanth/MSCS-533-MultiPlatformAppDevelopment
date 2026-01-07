@@ -1,3 +1,9 @@
+/*
+ * File: metricconversion.dart
+ * Description: Contains the main logic and UI for the Metric Conversion page.
+ * Implements a StatefulWidget to handle user input and dynamic updates.
+ */
+
 import 'package:flutter/material.dart';
 
 class MetricConversion extends StatefulWidget {
