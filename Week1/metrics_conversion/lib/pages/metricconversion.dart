@@ -8,9 +8,12 @@ class MetricConversion extends StatefulWidget {
 }
 
 class _MetricConversionState extends State<MetricConversion> {
+  final TextEditingController _inputController = TextEditingController();
   String _fromUnit = 'Meters';
   String _toUnit = 'Kilometers';
+  String _result = '';
 
+  // Dictionary to store conversion rates
   final Map<String, double> _conversionRates = {
     'Meters': 1.0,
     'Kilometers': 1000.0,
@@ -24,7 +27,7 @@ class _MetricConversionState extends State<MetricConversion> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Metric Conversion.."),
+        title: const Text("Measures Converter"),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
@@ -35,10 +38,11 @@ class _MetricConversionState extends State<MetricConversion> {
             Text(
               "Value",
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400)
             ),
             const SizedBox(height: 20),
             TextField(
+              controller: _inputController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 labelText: 'Enter value',
@@ -50,7 +54,7 @@ class _MetricConversionState extends State<MetricConversion> {
             Text(
               "From",
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400)
             ),
             const SizedBox(height: 20),
             DropdownButton(
@@ -64,21 +68,20 @@ class _MetricConversionState extends State<MetricConversion> {
               }).toList(),
               onChanged: (String? value) {
                 setState(() {
-                      _fromUnit = value!;
-                    });
+                  _fromUnit = value!;
+                });
               },
               value: _fromUnit,
               isExpanded: true,
               hint: const Text('From Unit'),
-            
             ),
-           const SizedBox(height: 20),
-           Text(
+            const SizedBox(height: 20),
+            Text(
               "To",
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400)
             ),
-          DropdownButton(
+            DropdownButton(
               items: _conversionRates.keys.map<DropdownMenuItem<String>>((
                 String value,
               ) {
@@ -89,8 +92,8 @@ class _MetricConversionState extends State<MetricConversion> {
               }).toList(),
               onChanged: (String? value) {
                 setState(() {
-                      _toUnit = value!;
-                    });
+                  _toUnit = value!;
+                });
               },
               value: _toUnit,
               isExpanded: true,
@@ -98,16 +101,40 @@ class _MetricConversionState extends State<MetricConversion> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {  },
-              child: const Text('Convert'),
+              onPressed: _convertValue,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
               ),
+              child: const Text('Convert'),
             ),
+            const SizedBox(height: 20),
+            Text(_result, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
     );
+  }
+
+  // Function to handle the conversion logic
+  void _convertValue() {
+    double? input = double.tryParse(_inputController.text);
+    if (input == null) {
+      setState(() {
+        _result = 'Please enter a input value';
+      });
+      return;
+    }
+
+    // Perform the conversion based on the selected units
+    double fromRate = _conversionRates[_fromUnit]!;
+    double toRate = _conversionRates[_toUnit]!;
+    double resultValue = (input * fromRate) / toRate;
+
+  // Update the result text
+    setState(() {
+      _result =
+          '$input $_fromUnit are ${resultValue.toStringAsFixed(4)} $_toUnit';
+    });
   }
 }
