@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 
+/// Main widget for Metric Conversion page
 class MetricConversion extends StatefulWidget {
   const MetricConversion({super.key});
 
@@ -13,6 +14,7 @@ class MetricConversion extends StatefulWidget {
   State<MetricConversion> createState() => _MetricConversionState();
 }
 
+/// State class for MetricConversion widget
 class _MetricConversionState extends State<MetricConversion> {
   final TextEditingController _inputController = TextEditingController();
   String _fromUnit = 'Meters';
@@ -47,6 +49,7 @@ class _MetricConversionState extends State<MetricConversion> {
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400)
             ),
             const SizedBox(height: 20),
+            // Input field for the value to be converted. It accepts only numeric input.
             TextField(
               controller: _inputController,
               keyboardType: TextInputType.number,
@@ -63,6 +66,7 @@ class _MetricConversionState extends State<MetricConversion> {
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400)
             ),
             const SizedBox(height: 20),
+            // Dropdown for selecting the unit to convert from
             DropdownButton(
               items: _conversionRates.keys.map<DropdownMenuItem<String>>((
                 String value,
@@ -87,6 +91,7 @@ class _MetricConversionState extends State<MetricConversion> {
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400)
             ),
+            // Dropdown for selecting the unit to convert to
             DropdownButton(
               items: _conversionRates.keys.map<DropdownMenuItem<String>>((
                 String value,
@@ -106,6 +111,7 @@ class _MetricConversionState extends State<MetricConversion> {
               hint: const Text('To Unit'),
             ),
             const SizedBox(height: 20),
+            // Button to trigger the conversion logic
             ElevatedButton(
               onPressed: _convertValue,
               style: ElevatedButton.styleFrom(
@@ -125,6 +131,7 @@ class _MetricConversionState extends State<MetricConversion> {
   // Function to handle the conversion logic
   void _convertValue() {
     double? input = double.tryParse(_inputController.text);
+    // Validate input and show use feedback if invalid
     if (input == null) {
       setState(() {
         _result = 'Please enter a input value';
