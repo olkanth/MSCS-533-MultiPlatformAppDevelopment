@@ -7,6 +7,7 @@ namespace LocationTrackingApp
     public partial class MainPage : ContentPage
     {
         private readonly LocationSyncService _locationService;
+        private CancellationTokenSource? _refreshCts;
 
         public MainPage(LocationSyncService locationService)
         {
@@ -18,7 +19,16 @@ namespace LocationTrackingApp
         {
             base.OnAppearing();
             await RequestLocationPermission();
+            await _locationService.StartTracking();
             await UpdateStatus();
+            StartAutoRefresh();
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            _refreshCts?.Cancel();
+            _locationService.StopTracking();
         }
 
         private async Task RequestLocationPermission()
@@ -35,50 +45,35 @@ namespace LocationTrackingApp
             }
         }
 
-        private async void OnTrackToggleClicked(object sender, EventArgs e)
+        private void StartAutoRefresh()
         {
-            if (_locationService.IsTracking)
-            {
-                _locationService.StopTracking();
-                trackButton.Text = "Start Tracking";
-            }
-            else
-            {
-                await _locationService.StartTracking();
-                trackButton.Text = "Stop Tracking";
-            }
+            _refreshCts?.Cancel();
+            _refreshCts = new CancellationTokenSource();
+            var token = _refreshCts.Token;
 
-            await UpdateStatus();
+            Dispatcher.StartTimer(TimeSpan.FromSeconds(10), () =>
+            {
+                if (token.IsCancellationRequested)
+                    return false;
+
+                MainThread.BeginInvokeOnMainThread(async () => await RefreshHeatMap());
+                return !token.IsCancellationRequested;
+            });
         }
 
-        private async void OnRefreshClicked(object sender, EventArgs e)
+        private async Task RefreshHeatMap()
         {
             var points = await _locationService.GetPoints();
             map.MapElements.Clear();
             map.Pins.Clear();
 
-            if (points.Count == 0)
+            if (points.Count > 0)
             {
-                await DisplayAlert("No Data", "No location points recorded yet. Start tracking first.", "OK");
-                return;
+                DrawHeatMap(points);
+                CenterMapOnPoints(points);
             }
 
-            DrawHeatMap(points);
-            CenterMapOnPoints(points);
             await UpdateStatus();
-        }
-
-        private async void OnClearClicked(object sender, EventArgs e)
-        {
-            bool confirm = await DisplayAlert("Clear Data",
-                "Are you sure you want to delete all location data?", "Yes", "No");
-            if (confirm)
-            {
-                await _locationService.ClearPoints();
-                map.MapElements.Clear();
-                map.Pins.Clear();
-                await UpdateStatus();
-            }
         }
 
         private void DrawHeatMap(List<Models.DeviceLocation> points)
@@ -203,8 +198,7 @@ namespace LocationTrackingApp
         private async Task UpdateStatus()
         {
             int count = await _locationService.GetPointCount();
-            string trackingState = _locationService.IsTracking ? "On" : "Off";
-            statusLabel.Text = $"Tracking: {trackingState} | Points: {count}";
+            statusLabel.Text = $"Tracking: On | Points: {count}";
         }
     }
 }

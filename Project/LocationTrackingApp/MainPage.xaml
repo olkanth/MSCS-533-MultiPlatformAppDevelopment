@@ -2,8 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
-             x:Class="LocationTrackingApp.MainPage">
-    <Grid RowDefinitions="*,Auto,Auto">
+             x:Class="LocationTrackingApp.MainPage"
+             Title="MainView">
+    <Grid RowDefinitions="*,Auto">
         <!-- Map fills the top area -->
         <maps:Map x:Name="map" IsShowingUser="True" Grid.Row="0" />
 
@@ -11,15 +12,5 @@
         <Label x:Name="statusLabel" Text="Tracking: Off | Points: 0"
                Grid.Row="1" HorizontalTextAlignment="Center"
                Padding="10" FontSize="14" BackgroundColor="#80000000" TextColor="White" />
-
-        <!-- Button toolbar -->
-        <HorizontalStackLayout Grid.Row="2" HorizontalOptions="Center" Spacing="10" Padding="10">
-            <Button x:Name="trackButton" Text="Start Tracking" Clicked="OnTrackToggleClicked"
-                    BackgroundColor="#512BD4" TextColor="White" />
-            <Button Text="Refresh Heatmap" Clicked="OnRefreshClicked"
-                    BackgroundColor="#2B0B98" TextColor="White" />
-            <Button Text="Clear Data" Clicked="OnClearClicked"
-                    BackgroundColor="#C62828" TextColor="White" />
-        </HorizontalStackLayout>
     </Grid>
 </ContentPage>
