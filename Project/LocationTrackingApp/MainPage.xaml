@@ -39,5 +39,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
              x:Class="LocationTrackingApp.MainPage">
-    <maps:Map x:Name="map" />
+    <Grid>
+        <maps:Map x:Name="map" IsShowingUser="True" />
+        <Button Text="Refresh Heatmap" VerticalOptions="End" Clicked="OnRefreshClicked" />
+    </Grid>
 </ContentPage>
