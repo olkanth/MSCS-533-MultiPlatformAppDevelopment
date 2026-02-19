@@ -188,9 +188,13 @@ namespace LocationTrackingApp
             double latRange = points.Max(p => p.Latitude) - points.Min(p => p.Latitude);
             double lonRange = points.Max(p => p.Longitude) - points.Min(p => p.Longitude);
 
-            // Add some padding to the range
-            double spanLat = Math.Max(latRange * 1.5, 0.005);
-            double spanLon = Math.Max(lonRange * 1.5, 0.005);
+            // Add slight padding, but keep a street-level minimum zoom (~200m)
+            double spanLat = Math.Max(latRange * 1.2, 0.002);
+            double spanLon = Math.Max(lonRange * 1.2, 0.002);
+
+            // Cap the max span so it doesn't zoom out to city/country level
+            spanLat = Math.Min(spanLat, 0.05);
+            spanLon = Math.Min(spanLon, 0.05);
 
             map.MoveToRegion(new MapSpan(new Location(avgLat, avgLon), spanLat, spanLon));
         }
