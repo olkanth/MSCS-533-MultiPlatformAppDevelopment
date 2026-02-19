@@ -13,6 +13,11 @@ namespace LocationTrackingApp
 
         public MainPage(LocationSyncService locationService)
         {
+            Location location = new Location(30.466811, -97.551351);
+            MapSpan mapSpan = new MapSpan(location, 0.1, 0.1);
+            Microsoft.Maui.Controls.Maps.Map map = new(mapSpan);
+            Content = map;
+
             InitializeComponent();
             _locationService = locationService;
         }
@@ -62,7 +67,7 @@ namespace LocationTrackingApp
             _refreshCts = new CancellationTokenSource();
             var token = _refreshCts.Token;
 
-            Dispatcher.StartTimer(TimeSpan.FromSeconds(6), () =>
+            Dispatcher.StartTimer(TimeSpan.FromSeconds(2), () =>
             {
                 if (token.IsCancellationRequested)
                     return false;
@@ -99,16 +104,16 @@ namespace LocationTrackingApp
             var sorted = points.OrderBy(p => p.Timestamp).ToList();
 
             // Draw route polyline connecting all points
-            var polyline = new Polyline
-            {
-                StrokeColor = Color.FromArgb("#4A90D9"),
-                StrokeWidth = 4
-            };
-            foreach (var pt in sorted)
-            {
-                polyline.Geopath.Add(new Location(pt.Latitude, pt.Longitude));
-            }
-            map.MapElements.Add(polyline);
+            //var polyline = new Polyline
+            //{
+            //    StrokeColor = Color.FromArgb("#4A90D9"),
+            //    StrokeWidth = 4
+            //};
+            //foreach (var pt in sorted)
+            //{
+            //    polyline.Geopath.Add(new Location(pt.Latitude, pt.Longitude));
+            //}
+            //map.MapElements.Add(polyline);
 
             // Pre-compute density for each point based on nearby neighbors
             const double proximityThresholdKm = 0.1; // 100 meters
@@ -144,7 +149,7 @@ namespace LocationTrackingApp
                 var circle = new Circle
                 {
                     Center = new Location(sorted[i].Latitude, sorted[i].Longitude),
-                    Radius = new Distance(8),
+                    Radius = new Distance(50),
                     StrokeColor = fillColor,
                     StrokeWidth = 3,
                     FillColor = fillColor.WithAlpha(0.9f)
