@@ -1,4 +1,4 @@
-﻿using LocationTrackingApp.Models;
+using LocationTrackingApp.Models;
 using SQLite;
 
 namespace LocationTrackingApp.Services
@@ -6,6 +6,10 @@ namespace LocationTrackingApp.Services
     public class LocationSyncService
     {
         private SQLiteAsyncConnection _db;
+        private CancellationTokenSource _trackingCts;
+        private bool _isTracking;
+
+        public bool IsTracking => _isTracking;
 
         public async Task Init()
         {
@@ -17,23 +21,79 @@ namespace LocationTrackingApp.Services
 
         public async Task StartTracking()
         {
-            await Init();
-            // Set tracking intervals (1 minute for example)
-            var request = new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(60));
+            if (_isTracking) return;
 
-            // This should ideally run in a background task/service
-            var location = await Geolocation.Default.GetLocationAsync(request);
-            if (location != null)
+            await Init();
+            _isTracking = true;
+            _trackingCts = new CancellationTokenSource();
+
+            // Run tracking loop in background
+            _ = TrackingLoop(_trackingCts.Token);
+        }
+
+        public void StopTracking()
+        {
+            _isTracking = false;
+            _trackingCts?.Cancel();
+            _trackingCts?.Dispose();
+            _trackingCts = null;
+        }
+
+        private async Task TrackingLoop(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
             {
-                await _db.InsertAsync(new DeviceLocation
+                try
                 {
-                    Latitude = location.Latitude,
-                    Longitude = location.Longitude,
-                    Timestamp = DateTime.UtcNow
-                });
+                    var request = new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(10));
+                    var location = await Geolocation.Default.GetLocationAsync(request, cancellationToken);
+
+                    if (location != null)
+                    {
+                        await _db.InsertAsync(new DeviceLocation
+                        {
+                            Latitude = location.Latitude,
+                            Longitude = location.Longitude,
+                            Timestamp = DateTime.UtcNow
+                        });
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception)
+                {
+                    // Geolocation may fail due to permissions or hardware; continue loop
+                }
+
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
             }
         }
 
-        public async Task<List<DeviceLocation>> GetPoints() => await _db.Table<DeviceLocation>().ToListAsync();
+        public async Task<List<DeviceLocation>> GetPoints()
+        {
+            await Init();
+            return await _db.Table<DeviceLocation>().ToListAsync();
+        }
+
+        public async Task<int> GetPointCount()
+        {
+            await Init();
+            return await _db.Table<DeviceLocation>().CountAsync();
+        }
+
+        public async Task ClearPoints()
+        {
+            await Init();
+            await _db.DeleteAllAsync<DeviceLocation>();
+        }
     }
 }
