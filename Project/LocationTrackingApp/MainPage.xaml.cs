@@ -8,6 +8,7 @@ namespace LocationTrackingApp
     {
         private readonly LocationSyncService _locationService;
         private CancellationTokenSource? _refreshCts;
+        private bool _isNewRoute = true;
 
         public MainPage(LocationSyncService locationService)
         {
@@ -19,6 +20,15 @@ namespace LocationTrackingApp
         {
             base.OnAppearing();
             await RequestLocationPermission();
+
+            if (_isNewRoute)
+            {
+                await _locationService.ClearPoints();
+                map.MapElements.Clear();
+                map.Pins.Clear();
+                _isNewRoute = false;
+            }
+
             await _locationService.StartTracking();
             await UpdateStatus();
             StartAutoRefresh();
@@ -51,7 +61,7 @@ namespace LocationTrackingApp
             _refreshCts = new CancellationTokenSource();
             var token = _refreshCts.Token;
 
-            Dispatcher.StartTimer(TimeSpan.FromSeconds(10), () =>
+            Dispatcher.StartTimer(TimeSpan.FromSeconds(6), () =>
             {
                 if (token.IsCancellationRequested)
                     return false;

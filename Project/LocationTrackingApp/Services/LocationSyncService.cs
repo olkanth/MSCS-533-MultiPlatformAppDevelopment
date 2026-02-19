@@ -45,7 +45,7 @@ namespace LocationTrackingApp.Services
             {
                 try
                 {
-                    var request = new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(10));
+                    var request = new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(5));
                     var location = await Geolocation.Default.GetLocationAsync(request, cancellationToken);
 
                     if (location != null)
@@ -69,7 +69,7 @@ namespace LocationTrackingApp.Services
 
                 try
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+                    await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
