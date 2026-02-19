@@ -9,6 +9,7 @@ namespace LocationTrackingApp
         private readonly LocationSyncService _locationService;
         private CancellationTokenSource? _refreshCts;
         private bool _isNewRoute = true;
+        private int _lastPointCount;
 
         public MainPage(LocationSyncService locationService)
         {
@@ -80,7 +81,13 @@ namespace LocationTrackingApp
             if (points.Count > 0)
             {
                 DrawHeatMap(points);
-                CenterMapOnPoints(points);
+
+                // Only re-center when new points arrive to avoid resetting zoom/tiles
+                if (points.Count != _lastPointCount)
+                {
+                    CenterMapOnPoints(points);
+                    _lastPointCount = points.Count;
+                }
             }
 
             await UpdateStatus();
@@ -133,14 +140,14 @@ namespace LocationTrackingApp
                 // Map density to color: blue (cold/low) → cyan → green → yellow → red (hot/high)
                 Color fillColor = GetHeatColor(normalizedDensity);
 
-                // Small, visible dot markers with high opacity
+                // Small pin-like dot markers
                 var circle = new Circle
                 {
                     Center = new Location(sorted[i].Latitude, sorted[i].Longitude),
-                    Radius = new Distance(30),
-                    StrokeColor = Color.FromArgb("#FFFFFF"),
-                    StrokeWidth = 2,
-                    FillColor = fillColor.WithAlpha(0.85f)
+                    Radius = new Distance(8),
+                    StrokeColor = fillColor,
+                    StrokeWidth = 3,
+                    FillColor = fillColor.WithAlpha(0.9f)
                 };
 
                 map.MapElements.Add(circle);
@@ -198,13 +205,13 @@ namespace LocationTrackingApp
             double latRange = points.Max(p => p.Latitude) - points.Min(p => p.Latitude);
             double lonRange = points.Max(p => p.Longitude) - points.Min(p => p.Longitude);
 
-            // Add slight padding, but keep a street-level minimum zoom (~200m)
-            double spanLat = Math.Max(latRange * 1.2, 0.002);
-            double spanLon = Math.Max(lonRange * 1.2, 0.002);
+            // Padding around points with a reasonable min/max zoom
+            double spanLat = Math.Max(latRange * 1.3, 0.008);
+            double spanLon = Math.Max(lonRange * 1.3, 0.008);
 
-            // Cap the max span so it doesn't zoom out to city/country level
-            spanLat = Math.Min(spanLat, 0.05);
-            spanLon = Math.Min(spanLon, 0.05);
+            // Cap so it doesn't zoom out too far
+            spanLat = Math.Min(spanLat, 0.1);
+            spanLon = Math.Min(spanLon, 0.1);
 
             map.MoveToRegion(new MapSpan(new Location(avgLat, avgLon), spanLat, spanLon));
         }

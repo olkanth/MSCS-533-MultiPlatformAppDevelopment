@@ -6,7 +6,7 @@
              Title="MainView">
     <Grid RowDefinitions="*,Auto">
         <!-- Map fills the top area -->
-        <maps:Map x:Name="map" IsShowingUser="True" Grid.Row="0" />
+        <maps:Map x:Name="map" IsShowingUser="True" MapType="Street" Grid.Row="0" />
 
         <!-- Status label -->
         <Label x:Name="statusLabel" Text="Tracking: Off | Points: 0"
