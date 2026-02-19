@@ -55,6 +55,7 @@ namespace LocationTrackingApp
         {
             var points = await _locationService.GetPoints();
             map.MapElements.Clear();
+            map.Pins.Clear();
 
             if (points.Count == 0)
             {
@@ -75,25 +76,41 @@ namespace LocationTrackingApp
             {
                 await _locationService.ClearPoints();
                 map.MapElements.Clear();
+                map.Pins.Clear();
                 await UpdateStatus();
             }
         }
 
         private void DrawHeatMap(List<Models.DeviceLocation> points)
         {
+            // Sort points by timestamp so the route is drawn in order
+            var sorted = points.OrderBy(p => p.Timestamp).ToList();
+
+            // Draw route polyline connecting all points
+            var polyline = new Polyline
+            {
+                StrokeColor = Color.FromArgb("#4A90D9"),
+                StrokeWidth = 4
+            };
+            foreach (var pt in sorted)
+            {
+                polyline.Geopath.Add(new Location(pt.Latitude, pt.Longitude));
+            }
+            map.MapElements.Add(polyline);
+
             // Pre-compute density for each point based on nearby neighbors
             const double proximityThresholdKm = 0.1; // 100 meters
-            var densities = new int[points.Count];
+            var densities = new int[sorted.Count];
 
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < sorted.Count; i++)
             {
                 int count = 0;
-                for (int j = 0; j < points.Count; j++)
+                for (int j = 0; j < sorted.Count; j++)
                 {
                     if (i == j) continue;
                     double dist = HaversineDistanceKm(
-                        points[i].Latitude, points[i].Longitude,
-                        points[j].Latitude, points[j].Longitude);
+                        sorted[i].Latitude, sorted[i].Longitude,
+                        sorted[j].Latitude, sorted[j].Longitude);
                     if (dist <= proximityThresholdKm)
                         count++;
                 }
@@ -103,24 +120,22 @@ namespace LocationTrackingApp
             int maxDensity = densities.Length > 0 ? densities.Max() : 1;
             if (maxDensity == 0) maxDensity = 1;
 
-            for (int i = 0; i < points.Count; i++)
+            // Draw colored dot markers at each point
+            for (int i = 0; i < sorted.Count; i++)
             {
                 double normalizedDensity = (double)densities[i] / maxDensity;
 
-                // Map density to color: blue (cold/low) → green → yellow → red (hot/high)
+                // Map density to color: blue (cold/low) → cyan → green → yellow → red (hot/high)
                 Color fillColor = GetHeatColor(normalizedDensity);
 
-                // Higher density = smaller, more opaque circles (concentrated heat)
-                // Lower density = larger, more transparent circles (diffuse)
-                double radius = 50 + (1 - normalizedDensity) * 100; // 50m to 150m
-                double opacity = 0.15 + normalizedDensity * 0.45;   // 0.15 to 0.60
-
+                // Small, visible dot markers with high opacity
                 var circle = new Circle
                 {
-                    Center = new Location(points[i].Latitude, points[i].Longitude),
-                    Radius = new Distance(radius),
-                    StrokeColor = Colors.Transparent,
-                    FillColor = fillColor.WithAlpha((float)opacity)
+                    Center = new Location(sorted[i].Latitude, sorted[i].Longitude),
+                    Radius = new Distance(30),
+                    StrokeColor = Color.FromArgb("#FFFFFF"),
+                    StrokeWidth = 2,
+                    FillColor = fillColor.WithAlpha(0.85f)
                 };
 
                 map.MapElements.Add(circle);
